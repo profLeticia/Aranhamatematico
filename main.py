@@ -1,6 +1,6 @@
 import pygame
 
-from code import jogo
+from code.jogo import Jogo
 
-jogo.Jogo()
+jogo = Jogo()
 jogo.executar()

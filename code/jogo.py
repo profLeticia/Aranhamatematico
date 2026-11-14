@@ -1,40 +1,27 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import pygame
-
 from code.menu import Menu
-
 
 class Jogo:
     def __init__(self):
         pygame.init()
-        self.tela = pygame.display.set_mode(size=(600, 480))
-
-    def iniciar(self, ):
-        pass
+        self.tela = pygame.display.set_mode((600, 480))
+        pygame.display.set_caption("Aranha Matemática")
+        self.relogio = pygame.time.Clock()
 
     def executar(self):
-        print('Setup Start')
+        menu = Menu(self.tela)
+        rodando = True
 
-        print('Setup End')
 
-        print('Loop Start')
-        while True:
 
-            menu = Menu(self.tela)
-            menu.Run()
-            pass
+        while rodando:
+            for evento in pygame.event.get():
+                if evento.type == pygame.QUIT:
+                    rodando = False
+            menu.run()
+            pygame.display.flip()
+            self.relogio.tick(60)
+        pygame.quit()
 
-           # for event in pygame.event.get():
-            #    if event.type == pygame.QUIT:
-             #       pygame.quit()
-              #      quit()
-
-    def atualizar(self, ):
-        pass
-
-    def desenhar(self, ):
-        pass
-
-    def verificar_fim(self, ):
-        pass
