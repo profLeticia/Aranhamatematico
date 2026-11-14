@@ -1,8 +1,12 @@
 import pygame
+from pygame.examples.grid import WINDOW_WIDTH
 from pygame.font import Font
 from pygame.rect import Rect
 from pygame.surface import Surface
 
+MENU_OPTION = ('NEW GAME 1P',
+               'NEW GAME 2P',
+               'SCORE')
 
 class Menu:
     def __init__(self, tela):
@@ -14,19 +18,24 @@ class Menu:
 
     def run(self):
 
-      pygame.mixer_music.load('./assets/Pitty - Equalize.mp3')
-      pygame.mixer_music.play(-1)
-      while True:
-          self.tela.blit(source=self.surf, dest=self.rect)
-          self.menu_text(100, "Aranha", (255,128,0), (self.tela.get_width() // 2, 120))
-          self.menu_text(100, "Matemática", (255, 128, 0), (self.tela.get_width() // 2, 240))
-          pygame.display.flip()
+            pygame.mixer.music.load('./assets/Pitty - Equalize.mp3')
+            pygame.mixer.music.play(-1)
+            while True:
+                self.tela.blit(source=self.surf, dest=self.rect)
+                self.menu_text(80, "ARANHA", (255, 128, 0), (self.tela.get_width() // 2, 70))
+                self.menu_text(80, "MATEMÁTICA", (255, 128, 0), (self.tela.get_width() // 2, 150))
 
-          for event in pygame.event.get():
-              if event.type == pygame.QUIT:
-                  pygame.quit()
-                  quit()
-      pass
+                for i in range(len(MENU_OPTION)):
+                    self.menu_text(20, MENU_OPTION[i], (255, 255, 255),
+                                   (self.tela.get_width() // 2, 260 + 35 * i))
+
+                pygame.display.flip()  # por último
+
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
+    pass
 
     def menu_text (self, text_size:int, text:str, text_color:tuple, text_center_pos: tuple):
         text_font: Font = pygame.font.SysFont('Arial', size=text_size)
