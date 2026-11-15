@@ -25,6 +25,7 @@ class Jogo:
             menu = Menu(self.tela)
             while True:
                 menu_return = menu.run()
+                pygame.mixer.music.stop()  # ou fadeout(800) se quiser suavizar
                 if menu_return == MENU_OPTION[0]:
                     GerenciadorJogo(self.tela, 'JOG1', menu_return).run()
                 elif menu_return == MENU_OPTION[1]:
@@ -32,6 +33,9 @@ class Jogo:
                 elif menu_return == MENU_OPTION[3]:
                     pygame.quit()
                     quit()
+
+
+
 
         pygame.quit()
 
