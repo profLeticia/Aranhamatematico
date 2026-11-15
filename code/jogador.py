@@ -49,8 +49,7 @@ class Jogador:
         self.surf = self.sprites[self.pose]
 
     def lancar_teia(self):
-        pygame.draw.line(self.tela, (230, 230, 230),
-                         (self.rect.centerx, 0), (self.rect.centerx, self.rect.top + 10), 2)
+        pygame.draw.line(self.tela, (230, 230, 230),(self.rect.centerx, 0), (self.rect.centerx, self.rect.top + 10), 2)
 
     def desenhar(self):
         self.lancar_teia()
