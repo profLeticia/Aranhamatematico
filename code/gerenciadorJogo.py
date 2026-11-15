@@ -123,6 +123,7 @@ class GerenciadorJogo:
 
     def tela_final(self, venceu):
         pygame.mixer.music.stop()
+        novo_recorde = self.salvar_recorde()
         largura, altura = self.tela.get_size()
         fonte_grande = pygame.font.SysFont('Arial', 64, bold=True)
         relogio = pygame.time.Clock()
@@ -151,5 +152,24 @@ class GerenciadorJogo:
             self.tela.blit(t1, t1.get_rect(center=(largura // 2, altura // 2 - 60)))
             self.tela.blit(t2, t2.get_rect(center=(largura // 2, altura // 2 + 10)))
             self.tela.blit(t3, t3.get_rect(center=(largura // 2, altura // 2 + 60)))
+            if novo_recorde:
+                t4 = self.fonte.render('NOVO RECORDE!', True, (255, 215, 0))
+                self.tela.blit(t4, t4.get_rect(center=(largura // 2, altura // 2 + 110)))
+
             pygame.display.flip()
             relogio.tick(60)
+
+    @staticmethod
+    def ler_recorde():
+        try:
+            with open('./recorde.txt', 'r') as arquivo:
+                return int(arquivo.read())
+        except (FileNotFoundError, ValueError):
+            return 0                       # ainda não existe arquivo: recorde é 0
+
+    def salvar_recorde(self):
+        if self.pontos > self.ler_recorde():           # só grava se bateu o recorde
+            with open('./recorde.txt', 'w') as arquivo:
+                arquivo.write(str(self.pontos))
+            return True                                # novo recorde!
+        return False
