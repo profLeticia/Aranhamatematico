@@ -1,9 +1,12 @@
 import pygame
 from code.cidade import Cidade
-from code.jogador import Jogador
 from code.desafioMatematico import DesafioMatematico
 from code.janela import Janela
+from code.jogador import Jogador, CONTROLES_1, CONTROLES_2
+from code.menu import MENU_OPTION
 META = 30
+TEMAS = ('dia', 'entardecer', 'noite')
+NIVEIS_POR_TEMA = 2
 
 
 class GerenciadorJogo:
@@ -12,17 +15,24 @@ class GerenciadorJogo:
         self.name = name
         self.menu_option = menu_option
         self.cidade = Cidade(tela)
-        self.jogador = Jogador(tela)
-        self.fonte = pygame.font.SysFont('Arial', 28, bold=True)  # criada UMA vez só
+        largura = tela.get_width()
+        if menu_option == MENU_OPTION[1]:                    # NEW GAME 2P
+            self.jogadores = [Jogador(tela, CONTROLES_1, 'heroi', largura * 0.35),
+                              Jogador(tela, CONTROLES_2, 'heroi2', largura * 0.65)]
+        else:                                                # NEW GAME 1P
+            self.jogadores = [Jogador(tela)]
+
+        for i, jogador in enumerate(self.jogadores):
+            jogador.nome = f'JOG{i + 1}'
+        self.fonte = pygame.font.SysFont('Arial', 28, bold=True)
+        self.fonte_pequena = pygame.font.SysFont('Arial', 20, bold=True)
         self.level = 1
-        self.pontos = 0
-        self.vidas = 3
         self.mensagem = ''
         self.mensagem_tempo = 0
         self.nova_rodada()
 
     def run(self):
-        pygame.mixer.music.load('./assets/Ramones - 10 - Track 10.mp3')  # troque pelo nome do seu arquivo
+        pygame.mixer.music.load('./assets/Ramones - 10 - Track 10.mp3')
         pygame.mixer.music.play(-1)  # -1 = repete para sempre
         relogio = pygame.time.Clock()
         while True:
@@ -33,8 +43,11 @@ class GerenciadorJogo:
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     return          # volta para o menu
 
-            self.jogador.mover(pygame.key.get_pressed())
+            teclas = pygame.key.get_pressed()
+            for jogador in self.jogadores:
+                jogador.mover(teclas)
             self.atualizar_level()
+            self.atualizar_tema()
             velocidade = self.velocidade()
             self.cidade.atualizar(velocidade)
             for janela in self.janelas:
@@ -50,7 +63,8 @@ class GerenciadorJogo:
             self.cidade.desenhar()
             for janela in self.janelas:
                 janela.desenhar()
-            self.jogador.desenhar()
+            for jogador in self.jogadores:
+                jogador.desenhar()
             self.desenhar_hud()
             pygame.display.flip()
             relogio.tick(60)
@@ -63,15 +77,32 @@ class GerenciadorJogo:
 
     def desenhar_hud(self):
         largura = self.tela.get_width()
-        pygame.draw.rect(self.tela, (0, 0, 0), (0, 0, largura, 70))  # barra preta
-        titulo = self.fonte.render(self.desafio.enunciado, True, (255, 255, 255))
-        self.tela.blit(titulo, titulo.get_rect(center=(largura // 2, 35)))  # a pergunta
-        nivel = self.fonte.render(f'LEVEL {self.level}', True, (255, 128, 0))
-        self.tela.blit(nivel, (15, 8))
-        pts = self.fonte.render(f'Pontos: {self.pontos}', True, (255, 255, 255))
-        self.tela.blit(pts, (15, 38))
-        for i in range(self.vidas):  # uma bolinha por vida
-            pygame.draw.circle(self.tela, (230, 40, 60), (largura - 30 - i * 34, 35), 12)
+        pygame.draw.rect(self.tela, (0, 0, 0), (0, 0, largura, 70))
+
+        if len(self.jogadores) == 1:
+            j = self.jogadores[0]
+            titulo = self.fonte.render(self.desafio.enunciado, True, (255, 255, 255))
+            self.tela.blit(titulo, titulo.get_rect(center=(largura // 2, 35)))
+            nivel = self.fonte.render(f'LEVEL {self.level}', True, (255, 128, 0))
+            self.tela.blit(nivel, (15, 8))
+            pts = self.fonte.render(f'Pontos: {j.pontos}', True, (255, 255, 255))
+            self.tela.blit(pts, (15, 38))
+            for i in range(j.vidas):
+                pygame.draw.circle(self.tela, (230, 40, 60), (largura - 30 - i * 34, 35), 12)
+        else:
+            j1, j2 = self.jogadores
+            centro = self.fonte.render(f'LEVEL {self.level}  |  {self.desafio.enunciado}',
+                                       True, (255, 255, 255))
+            self.tela.blit(centro, centro.get_rect(center=(largura // 2, 35)))
+            t1 = self.fonte_pequena.render(f'JOG1  Pontos: {j1.pontos}', True, (255, 255, 255))
+            t2 = self.fonte_pequena.render(f'JOG2  Pontos: {j2.pontos}', True, (255, 255, 255))
+            self.tela.blit(t1, (15, 6))
+            self.tela.blit(t2, t2.get_rect(topright=(largura - 15, 6)))
+            for i in range(j1.vidas):
+                pygame.draw.circle(self.tela, (230, 40, 60), (27 + i * 30, 52), 10)
+            for i in range(j2.vidas):
+                pygame.draw.circle(self.tela, (60, 120, 255), (largura - 27 - i * 30, 52), 10)
+
         if self.mensagem_tempo > 0:
             self.mensagem_tempo -= 1
             msg = self.fonte.render(self.mensagem, True, (255, 255, 120))
@@ -85,41 +116,48 @@ class GerenciadorJogo:
                         for x, valor in zip(xs, self.desafio.alternativas)]
 
     def verificar_janelas(self):
+        dois = len(self.jogadores) > 1
         rodada_acabou = False
 
         for janela in self.janelas:
-            if janela.verificar_colisao(self.jogador.rect):
-                if self.desafio.verificar_resposta(janela.resposta):
-                    self.adicionar_pontos()
-                    self.mensagem = 'Acertou! +1'
-                else:
-                    self.vidas -= 1
-                    self.mensagem = f'Errou! Resposta: {self.desafio.resposta_correta}'
-                rodada_acabou = True
+            for jogador in self.jogadores:
+                if janela.verificar_colisao(jogador.rect):
+                    quem = f'{jogador.nome}: ' if dois else ''
+                    if self.desafio.verificar_resposta(janela.resposta):
+                        jogador.adicionar_pontos()
+                        self.mensagem = f'{quem}Acertou! +1'
+                    else:
+                        jogador.remover_vida()
+                        self.mensagem = f'{quem}Errou! Resposta: {self.desafio.resposta_correta}'
+                    rodada_acabou = True
+                    break
+            if rodada_acabou:
                 break
 
-        # nenhuma janela foi pega e todas saíram pela parte de baixo
-
         if not rodada_acabou and all(j.saiu_da_tela() for j in self.janelas):
-            self.vidas -= 1
-            self.mensagem = 'A resposta passou!'
+            if dois:
+                self.mensagem = 'Ninguém acertou!'
+            else:
+                self.jogadores[0].remover_vida()
+                self.mensagem = 'A resposta passou!'
             rodada_acabou = True
 
         if rodada_acabou:
-            self.mensagem_tempo = 60  # 60 quadros = 1 segundo
+            self.mensagem_tempo = 60
             self.nova_rodada()
-
-    def adicionar_pontos(self):
-        self.pontos += 1
 
     def remover_vida(self):
         self.vidas -= 1
 
+    @property
+    def pontos(self):                      # maior pontuação entre os jogadores
+        return max(j.pontos for j in self.jogadores)
+
     def verificar_vitoria(self):
-        return self.pontos >= META
+        return any(j.pontos >= META for j in self.jogadores)
 
     def verificar_derrota(self):
-        return self.vidas <= 0
+        return any(j.vidas <= 0 for j in self.jogadores)
 
     def tela_final(self, venceu):
         pygame.mixer.music.stop()
@@ -173,3 +211,8 @@ class GerenciadorJogo:
                 arquivo.write(str(self.pontos))
             return True                                # novo recorde!
         return False
+
+    def atualizar_tema(self):
+        posicao = (self.level - 1) // NIVEIS_POR_TEMA     # levels 1-2 -> 0, 3-4 -> 1, 5+ -> 2
+        posicao = min(posicao, len(TEMAS) - 1)
+        self.cidade.trocar_tema(TEMAS[posicao])
