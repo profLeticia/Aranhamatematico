@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 class DesafioMatematico:
-    def __init__(self):
+    def __init__(self,  tela, nome, menu_option):
         self.enunciado = None
         self.resposta_correta = None
         self.alternativas = None
